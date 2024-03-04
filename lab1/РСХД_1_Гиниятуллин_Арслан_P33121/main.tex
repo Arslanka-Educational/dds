@@ -1,0 +1,135 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{setspace}
+\usepackage{changepage}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.18}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue,
+  filecolor  = magenta,      
+  urlcolor   = darkgray,
+  pdftitle   = ddb-report-1-smirnov-victor-p33131,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=codestyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \begin{spacing}{1.4}
+            \large{Университет ИТМО} \\
+            \large{Факультет программной инженерии и компьютерной техники} \\
+        \end{spacing}
+        \vfill
+        \textbf{
+            \huge{Распределённые системы хранения данных.} \\
+            \huge{Лабораторная работа №1.} \\
+        }
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{tabular}{r l}
+            Группа:        & P33121                      \\
+            Студент:       & Гиниятуллин Арслан Рафаилович     \\
+            Преподаватель: & Афанасьев Дмитрий Борисович \\
+            Вариант:       & 661                         \\
+        \end{tabular}
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{large}
+            2024
+        \end{large}
+    \end{center}
+\end{titlepage}
+
+\section*{Ключевые слова}
+
+База данных, PostgreSQL, системный каталог.
+
+\tableofcontents
+
+\section{Цель работы}
+
+Научиться проектировать базы данных, составлять инфологические и даталогические модели данных, реализовывать их в БД PostgreSQL, научиться выполнять запросы.
+
+\section{Текст задания}
+
+ИИспользуя сведения из системных каталогов, сформировать запрос, реализующий полнотекстовый поиск по исходному коду всех процедур, функций и триггеров в пределах заданной схемы. Поиск должен осуществляться независимо от регистра символов в строке запроса. Программу оформить в виде процедуры. \\
+
+Пример вывода:
+\begin{verbatim}
+Текст запроса: Н_Люди
+
+ No. Имя объекта	          # строки	     Текст
+ --- -------------------   -------------  --------------------------------------------
+   1 MyFunction1           16		            SELECT * FROM н_люди WHERE
+   2 MyProcedure1	         42		            INSERT INTO Н_ЛЮДИ
+		...
+\end{verbatim}
+
+\section{Инициализация объектов}
+
+Далее был написан SQL скрипт, создающий таблицу, аналогичную той, что в примере.
+
+\lstinputlisting[language=SQL]{init.sql}
+
+\section{Реализация скрипта}
+
+\lstinputlisting[language=SQL]{find_fpt_declarations_like.sql}
+
+\section{Вывод скрипта}
+
+\begin{verbatim}
+No.  Имя объекта          # строки       Текст
+---  -------------------- -------------  --------------------------------------------
+1    auditlog              1                  INSERT INTO AUDIT(EMP_ID, ENTRY_DATE) VAL
+2    auditlog              10             CREATE OR REPLACE FUNCTION public.auditlog()
+3    example_trigger       1              CREATE TRIGGER example_trigger AFTER INSERT O
+    
+\end{verbatim}
+\section{Вывод}
+
+Данная лабораторная работа помогла мне изучить системный каталог PostgreSQL.
+
+\end{document}
