@@ -1,0 +1,219 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{setspace}
+\usepackage{changepage}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.18}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue,
+  filecolor  = magenta,      
+  urlcolor   = darkgray,
+  pdftitle   = ddb-report-2-giniiatullin-arslan-p33131,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=codestyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \begin{spacing}{1.4}
+            \large{Университет ИТМО} \\
+            \large{Факультет программной инженерии и компьютерной техники} \\
+        \end{spacing}
+        \vfill
+        \textbf{
+            \huge{Распределённые системы хранения данных.} \\
+            \huge{Лабораторная работа №2.} \\
+        }
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{tabular}{r l}
+            Группа:        & P33121                      \\
+            Студенты:       & Гиниятуллин Арслан Рафаилович \\
+                            & Бекмухаметов Владислав Робертович   \\
+            Преподаватель: & Афанасьев Дмитрий Борисович \\
+            Вариант:       & 6 \\
+        \end{tabular}
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{large}
+            2024
+        \end{large}
+    \end{center}
+\end{titlepage}
+
+\section*{Ключевые слова}
+
+База данных, PostgreSQL, кластер, конфигурация.
+
+\tableofcontents
+
+\section{Цель работы}
+
+Научиться создавать и конфигурировать кластер баз данных PostgreSQL, сами БД, табличные пространства и роли.
+
+\section{Текст задания}
+
+\subsection{Описание}
+На выделенном узле создать и сконфигурировать новый кластер БД, саму БД,
+табличные пространства и новую роль в соответствии с заданием. Произвести
+наполнение базы.
+\\ \\
+Отчёт должен содержать все команды по настройке, а также измененные строки
+конфигурационных файлов.
+
+\begin{itemize}
+    \item  Подключение к узлу через helios: 
+            \begin{verbatim} ssh -J sXXXXXX@helios.cs.ifmo.ru:2222 postgresY@pgZZZ\end{verbatim} 
+    \item С самого helios или из учебных классов: 
+            \begin{verbatim}ssh postgresY@pgZZZ\end{verbatim}
+\end{itemize} 
+\\
+Персональный пароль для работы с узлом выдается преподавателем.
+Обратите внимание, что домашняя директория пользователя \textbf{/var/postgres/\$LOGNAME}.
+\subsection{Этапы выполнения работы}
+
+Этапы выполнения работы:
+\begin{enumerate}
+    \item Инициализация кластера БД
+          \begin{itemize}
+              \item Имя узла — \textbf{pg105}
+              \item Имя пользователя — \textbf{postgres0}
+              \item Директория кластера БД — \textbf{\$HOME/u01/gsd65}
+              \item Кодировка, локаль — \textbf{KOI8-R, русская}
+              \item Перечисленные параметры задать через аргументы команды.
+          \end{itemize}
+    \item Конфигурация и запуск сервера БД
+          \begin{itemize}
+              \item Способ подключения к БД — \textbf{TCP/IP socket, номер порта 9006}
+              \item Остальные способы подключений \textbf{запретить}
+              \item Способ аутентификации клиентов — \textbf{по имени пользователя}
+              \item Настроить следующие параметры сервера: \begin{verbatim}
+max_connections, shared_buffers, temp_buffers, work_mem,
+checkpoint_timeout, effective_cache_size, fsync, commit_delay\end{verbatim}
+               Параметры должны быть подобраны в соответствии со сценарием OLTP: \textbf{1000 транзакций/сек}. с записью размером по \textbf{8 КБ}, акцент на высокую доступность данных;
+              \item Директория WAL файлов — \textbf{\$HOME/u02/gsd65}
+              \item Формат лог-файлов — \textbf{csv}
+              \item Уровень сообщений лога — \textbf{ERROR}
+              \item Дополнительно логировать — завершение сессий и продолжительность
+выполнения команд
+          \end{itemize}
+    \item Дополнительные табличные пространства и наполнение
+          \begin{itemize}
+              \item Создать новые табличные пространства для различных таблиц:
+                    \begin{itemize}
+                        \item \textbf{\$HOME/u03/gsd65}
+                        \item \textbf{\$HOME/u04/gsd65}
+                        \item \textbf{\$HOME/u05/gsd65}
+                    \end{itemize}
+                \item На основе \textbf{template0} создать новую базу — \textbf{greatercapybara}
+            \item От имени новой роли (не администратора) произвести наполнение
+существующих баз тестовыми наборами данных. Предоставить права по
+необходимости. Табличные пространства должны использоваться по назначению.
+            \item Вывести список всех табличных пространств кластера и содержащиеся
+в них объекты.
+          \end{itemize}
+\end{enumerate}
+
+\section{Выполнение этапов работы}
+
+\subsection{Инициализация кластера БД}
+
+\subsubsection{Подключение к узлу с helios}
+Подключаемся к узлу \textbf{pg105} под пользователем \textbf{postgres0}
+\begin{verbatim}
+    ssh postgres0@pg105
+\end{verbatim}
+
+\subsubsection{Создание кластера}
+Создадим соответствующий каталог для будущего кластера PostgreSQL, предоставим права владения пользователю \textbf{postgres0}, чтобы была возможность создание подкаталогов, перейдем под его управление.
+\begin{verbatim}
+    mkdir -p $HOME/u01/gsd65
+    chown postgres0 $HOME/u01/gsd65
+    su postgres0
+\end{verbatim}
+\\
+Далее инициализируем кластер в ранее созданном каталоге --pgdata=\textbf{\$HOME/u01/gsd65}, c именем пользователя --username=\textbf{postgres0}, кодировкой --encoding=\textbf{KOI8R} и локалью --locale=\textbf{ru\_RU.KOI8\-R}.
+\begin{verbatim}
+    initdb --pgdata=$HOME/u01/gsd65 --username=postgres0 --encoding=KOI8R --locale=ru_RU.KOI8-R
+\end{verbatim}
+
+\section{Конфигурация и запуск сервера БД}
+
+\subsection{Настройка способа подключения и аутентификации в файле pg\_hba.conf}
+Для настройка аутентификации клиентов по \textbf{TCP/IP socket}, используя имя пользователя, исключая все другие способы подключения, нужно отредактировать конфигурационный файл \textbf{pg\_hba.conf}, оставив там одну раскомментированную строку (см. ниже)
+
+\begin{verbatim}
+ #TYPE  DATABASE        USER            ADDRESS                 METHOD
+  host   all             all                                     ident
+\end{verbatim}
+\\
+Здесь \textbf{host} – указывает на управление подключениями, устанавливаемыми по \textbf{TCP/IP}. \\ \\ 
+\textbf{all} – указывает на то, что запись подходит всем БД и всем пользователям. \\ \\ 
+\textbf{ident} – получает имя пользователя операционной системы клиента, связываясь с сервером Ident, и проверяет, соответствует ли оно имени пользователя базы данных. Аутентификация ident может использоваться только для подключений по \textbf{TCP/IP}.
+
+\subsection{Настройка параметров сервера в файле postgresql.conf}
+
+\subsubsection{Номер порта для подключения}
+Для подключения к БД по порту \textbf{9006} добавим в конфигурационный файл \textbf{postgresql.conf} следующую строку.
+\begin{verbatim}
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+
+# - Connection Settings -
+port = 9006
+\end{verbatim}
+
+\subsubsection{Настройка параметров сервера для OLTP сценария}
+\textbf{Описание сценария}: \textbf{1000 транзакций/сек} с
+записью размером по \textbf{8 КБ}, акцент на высокую доступность данных.
+\\ \\
+Установим значения \textbf{max\_connections}=1000 для одновременного обслуживания 1000 подключений. Так как одно соединение може обрабатывать ону транзакцию за промежуток времени.
+\begin{verbatim}
+    #max_connections
+\end{verbatim}
+\section{Дополнительные табличные пространства и наполнение}
+\end{document}
