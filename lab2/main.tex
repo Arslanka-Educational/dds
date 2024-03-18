@@ -216,4 +216,72 @@ port = 9006
     #max_connections
 \end{verbatim}
 \section{Дополнительные табличные пространства и наполнение}
+
+Создаем директории для новых таблих пространств. Каталог должен быть пустым и принадлежать пользователю ОС, под которым запущен PostgreSQL.
+\begin{verbatim}
+    mkdir -p $HOME/u03/gsd65
+    mkdir -p $HOME/u04/gsd65
+    mkdir -p $HOME/u05/gsd65
+\end{verbatim}
+Подключаемся к нашему серверу
+\begin{verbatim}
+    psql -p 9006 -u postgres0 postgres
+\end{verbatim}
+Создаем необходимые табличные пространства. 
+Создавать табличное пространство должен суперпользователь базы данных, но после этого можно разрешить обычным пользователям его использовать. После создания можно проверить успешность командой db
+\begin{verbatim}
+    CREATE TABLESPACE u03_gsd65 LOCATION '/var/db/postgres0/u03/gsd65';
+    CREATE TABLESPACE u04_gsd65 LOCATION '/var/db/postgres0/u04/gsd65';
+    CREATE TABLESPACE u05_gsd65 LOCATION '/var/db/postgres0/u05/gsd65';
+    \db
+\end{verbatim}
+На основе template0 создаем новую базу данных **greatercapybara**
+\begin{verbatim}
+    createdb -p 9006 -T template1 greatercapybara
+\end{verbatim}
+Создаем тестовые таблицы. Для указания табличного пространства можно использовать TABLESPACE, а можно использовать параметр default\_tablespace 
+\begin{verbatim}
+    CREATE TABLE xxx ( id serial primary key, name text ) TABLESPACE u03_gsd65;
+\end{verbatim}
+\begin{verbatim}
+    SET default_tablespace = u03_gsd65;
+    CREATE TABLE yyy ( id serial primary key, name text, xxx_id int);
+\end{verbatim}
+Создаем тестового пользователя и выдаем необходимые права
+\begin{verbatim}
+    CREATE USER s000000 WITH PASSWORD '1111';
+    GRANT CONNECT ON DATABASE greatercapybara TO s000000;
+    GRANT USAGE ON SCHEMA public TO s000000;
+\end{verbatim}
+Наполнение данными
+\begin{verbatim}
+    psql -U s000000 -d greatercapybara
+    
+    INSERT INTO xxx (name)
+    VALUES ('name1'), ('name2'), ('name3');
+    
+    INSERT INTO yyy (name, xxx_id)
+    VALUES ('name4', 1), ('name5', 2);
+\end{verbatim}
+Список всех табличных пространств кластера и содержащиеся в них объекты
+\begin{verbatim}
+    SELECT ts.spcname AS tablespace_name, NULL AS table_name, NULL AS object_type
+    FROM pg_tablespace ts
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS table_name, 'table' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+    WHERE c.relkind = 'r'
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS index_name, 'index' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+            JOIN pg_index i ON c.oid = i.indexrelid
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS sequence_name, 'sequence' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+    WHERE c.relkind = 'S'
+    ORDER BY tablespace_name, table_name;
+\end{verbatim}
 \end{document}
