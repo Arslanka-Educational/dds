@@ -1,0 +1,385 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{setspace}
+\usepackage{changepage}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.18}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue,
+  filecolor  = magenta,      
+  urlcolor   = darkgray,
+  pdftitle   = ddb-report-2-giniiatullin-arslan-p33131,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=codestyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \begin{spacing}{1.4}
+            \large{Университет ИТМО} \\
+            \large{Факультет программной инженерии и компьютерной техники} \\
+        \end{spacing}
+        \vfill
+        \textbf{
+            \huge{Распределённые системы хранения данных.} \\
+            \huge{Лабораторная работа №2.} \\
+        }
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{tabular}{r l}
+            Группа:        & P33121                      \\
+            Студенты:       & Гиниятуллин Арслан Рафаилович \\
+                            & Бекмухаметов Владислав Робертович   \\
+            Преподаватель: & Афанасьев Дмитрий Борисович \\
+            Вариант:       & 6 \\
+        \end{tabular}
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{large}
+            2024
+        \end{large}
+    \end{center}
+\end{titlepage}
+
+\section*{Ключевые слова}
+
+База данных, PostgreSQL, кластер, конфигурация.
+
+\tableofcontents
+
+\section{Цель работы}
+
+Научиться создавать и конфигурировать кластер баз данных PostgreSQL, сами БД, табличные пространства и роли.
+
+\section{Текст задания}
+
+\subsection{Описание}
+На выделенном узле создать и сконфигурировать новый кластер БД, саму БД,
+табличные пространства и новую роль в соответствии с заданием. Произвести
+наполнение базы.
+\\ \\
+Отчёт должен содержать все команды по настройке, а также измененные строки
+конфигурационных файлов.
+
+\begin{itemize}
+    \item  Подключение к узлу через helios: 
+            \begin{verbatim} ssh -J sXXXXXX@helios.cs.ifmo.ru:2222 postgresY@pgZZZ\end{verbatim} 
+    \item С самого helios или из учебных классов: 
+            \begin{verbatim}ssh postgresY@pgZZZ\end{verbatim}
+\end{itemize} 
+\\
+Персональный пароль для работы с узлом выдается преподавателем.
+Обратите внимание, что домашняя директория пользователя \textbf{/var/postgres/\$LOGNAME}.
+\subsection{Этапы выполнения работы}
+
+Этапы выполнения работы:
+\begin{enumerate}
+    \item Инициализация кластера БД
+          \begin{itemize}
+              \item Имя узла — \textbf{pg105}
+              \item Имя пользователя — \textbf{postgres0}
+              \item Директория кластера БД — \textbf{\$HOME/u01/gsd65}
+              \item Кодировка, локаль — \textbf{KOI8-R, русская}
+              \item Перечисленные параметры задать через аргументы команды.
+          \end{itemize}
+    \item Конфигурация и запуск сервера БД
+          \begin{itemize}
+              \item Способ подключения к БД — локально, номер порта 9006
+              \item Остальные способы подключений \textbf{запретить}
+              \item Способ аутентификации клиентов — \textbf{по имени пользователя}
+              \item Настроить следующие параметры сервера: \begin{verbatim}
+max_connections, shared_buffers, temp_buffers, work_mem,
+checkpoint_timeout, effective_cache_size, fsync, commit_delay\end{verbatim}
+               Параметры должны быть подобраны в соответствии со сценарием OLTP: \textbf{1000 транзакций/сек}. с записью размером по \textbf{8 КБ}, акцент на высокую доступность данных;
+              \item Директория WAL файлов — \textbf{\$HOME/u02/gsd65}
+              \item Формат лог-файлов — \textbf{csv}
+              \item Уровень сообщений лога — \textbf{ERROR}
+              \item Дополнительно логировать — завершение сессий и продолжительность
+выполнения команд
+          \end{itemize}
+    \item Дополнительные табличные пространства и наполнение
+          \begin{itemize}
+              \item Создать новые табличные пространства для различных таблиц:
+                    \begin{itemize}
+                        \item \textbf{\$HOME/u03/gsd65}
+                        \item \textbf{\$HOME/u04/gsd65}
+                        \item \textbf{\$HOME/u05/gsd65}
+                    \end{itemize}
+                \item На основе \textbf{template0} создать новую базу — \textbf{greatercapybara}
+            \item От имени новой роли (не администратора) произвести наполнение
+существующих баз тестовыми наборами данных. Предоставить права по
+необходимости. Табличные пространства должны использоваться по назначению.
+            \item Вывести список всех табличных пространств кластера и содержащиеся
+в них объекты.
+          \end{itemize}
+\end{enumerate}
+
+\section{Выполнение этапов работы}
+
+\subsection{Инициализация кластера БД}
+
+\subsubsection{Подключение к узлу с helios}
+Подключаемся к узлу \textbf{pg105} под пользователем \textbf{postgres0}
+\begin{verbatim}
+    ssh postgres0@pg105
+\end{verbatim}
+
+\subsubsection{Создание кластера}
+Создадим соответствующий каталог для будущего кластера PostgreSQL, предоставим права владения пользователю \textbf{postgres0}, чтобы была возможность создание подкаталогов, перейдем под его управление.
+\begin{verbatim}
+    mkdir -p $HOME/u01/gsd65
+    chown postgres0 $HOME/u01/gsd65
+    su postgres0
+\end{verbatim}
+\\
+Далее инициализируем кластер в ранее созданном каталоге --pgdata=\textbf{\$HOME/u01/gsd65}, c именем пользователя --username=\textbf{postgres0}, кодировкой --encoding=\textbf{KOI8R} и локалью --locale=\textbf{ru\_RU.KOI8\-R}.
+\begin{verbatim}
+    initdb --pgdata=$HOME/u01/gsd65 --username=postgres0 --encoding=KOI8R --locale=ru_RU.KOI8-R
+\end{verbatim}
+
+\section{Конфигурация и запуск сервера БД}
+
+\subsection{Настройка способа подключения и аутентификации в файле pg\_hba.conf}
+Для настройки аутентификации клиентов по \textbf{локальному Unix-domain сокету}, используя имя пользователя, нужно отредактировать конфигурационный файл \textbf{pg\_hba.conf}, добавив строку (см. ниже)
+
+\begin{verbatim}
+ #TYPE  DATABASE        USER            ADDRESS                 METHOD
+  local all             all                                     peer  map=postgres0
+\end{verbatim}
+\\
+И в файле \textbf{pg\_ident.conf} добавим соответствующий маппинг (см. ниже)
+\begin{verbatim}
+  # MAPNAME       SYSTEM-USERNAME         PG-USERNAME
+  postgres0       postgres0               postgres0
+\end{verbatim}
+\\ \\
+Здесь \textbf{local} – указывает на управление подключениями, устанавливаемыми по \textbf{Unix-domain сокетам}. \\ \\ 
+\textbf{all} – указывает на то, что запись подходит всем БД и всем пользователям. \\ \\ 
+\textbf{peer} – получает имя пользователя операционной системы клиента из операционной системы и проверяет, соответствует ли оно имени пользователя запрашиваемой базы данных. Доступно только для локальных подключений.
+\\ \\ 
+Чтобы исключить типы покдлючений через Unix-domain-сокеты и оставить только локальные TCP/IP подключения, необходимо выставить следующие значения в \textbf{postgresql.conf}. \\ \\
+Где \textit{listen\_addresses=\textbf{''}} – указывает на TCP/IP адреса, которые должен слушать сервер (в нашем случае таковых нет), исключая Unix-сокеты, а настройка \textit{unix\_socket\_directories=\textbf{'\/tmp'}} – указывает на каталог Unix-сокета для принятия соединений.
+\begin{verbatim}
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+
+# - Connection Settings -
+listen_addresses = 'localhost'
+unix_socket_directories = '\tmp'
+\end{verbatim}
+\\ \\ 
+
+\subsection{Настройка параметров сервера в файле postgresql.conf}
+
+\subsubsection{Номер порта для подключения}
+Для подключения к БД по порту \textbf{9006} добавим в конфигурационный файл \textbf{postgresql.conf} следующую строку.
+\begin{verbatim}
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+
+# - Connection Settings -
+port = 9006
+\end{verbatim}
+
+\subsubsection{Настройка параметров сервера для OLTP сценария}
+\textbf{Описание сценария}: \textbf{1000 транзакций/сек} с
+записью размером по \textbf{8 КБ}, акцент на высокую доступность данных.
+\\ \\
+Установим значения \textbf{max\_connections}=1000 для одновременного обслуживания 1000 подключений. Так как одно соединение може обрабатывать ону транзакцию за промежуток времени.
+
+\begin{verbatim}
+    max_connections = 1000
+\end{verbatim}
+\\ 
+Если каждый сеанс создаст по 1 транзакции и чтобы ограничить количество, сколько может выполняться максимально транзакций за раз от всех 1000 сеансов ниже нужно выставить параметр \textbf{max\_prepared\_transactions} на 1000.
+
+\begin{verbatim}
+    max_prepared_transactions = 1000
+\end{verbatim}
+
+Для значения \textbf{temp\_buffers}, которое задаёт максимальный объём памяти, выделяемой для временных буферов в каждом сеансе, следует выставить в \textbf{8KB * 1000 = 8MB}, однако вероятность поддерживания 1000 транзакций в одном сенасе мала, поставим среднее значение в 4MB.
+
+\begin{verbatim}
+    temp_bufffers = 4MB
+\end{verbatim}
+\\ \\ 
+Для \textbf{work\_mem}, соответсвенно, тоже выставим значение в 4MB.
+Этот параметр Зздаёт базовый максимальный объём памяти, который будет использоваться во внутренних операциях при обработке запросов (например, для сортировки или хеш-таблиц), прежде чем будут задействованы временные файлы на диске.
+\begin{verbatim}
+    work_mem = 4MB
+\end{verbatim}
+\\ \\
+Задаёт объём памяти, который будет использовать сервер баз данных для буферов в разделяемой памяти. Разумным начальным значением shared\_buffers будет 25\% от объёма памяти. Существуют варианты нагрузки, при которых эффективны будут и ещё большие значения shared\_buffers, но так как  использует и кеш операционной системы, выделять для shared\_buffers более 40\% ОЗУ вряд ли будет полезно.
+\\ \\ 
+Теперь имея представление о затратах  системы, можно предположить какой объем памяти понадобится системе. 4 GB будет задействовано максимум от work\_mem и temp\_buffers на 1000 транзакций (то есть 8 GB в сумме). Так как 25\% мы будем выделять под sharred\_buffers, а оставшуюся память под effective\_cache\_size. Благоприятным значением системы будет объем памяти 16GB.
+\\ \\
+25\% * 16GB = 4GB - выделяем под shared\_buffers.
+При увеличении shared\_buffers обычно требуется соответственно увеличить max\_wal\_size, чтобы растянуть процесс записи большого объёма новых или изменённых данных на более продолжительное время. Но при увеличении min\_wal\_size время восстановление системы будет достаточно высокое.
+\begin{verbatim}
+    max_wal_size = 4GB
+    min_wal_size = 80MB
+\end{verbatim}
+\\ \\
+Выставим \textbf{сheckpoint\_timeout = 5min}	
+\\ \\ 
+Определяет представление планировщика об эффективном размере дискового кеша, доступном для одного запроса. Точно должен быть >= \textbf{shared\_buffers}. Как говорилось выше при расчетах, было принято решение выделить под кэш 4GB.
+ (по дефолту) - не нужно рисковать данными при этом гнаться
+за производительностью.
+\begin{verbatim}
+    effective_cache_size = 4GB
+\end{verbatim}
+\\ \\ 
+Выключение параметра приводит к росту производительности, но появляется значительный риск потери всех данных при внезапном выключении питания. Риск не оправдан при достаточно большим взаимодействием с БД.
+
+\begin{verbatim}
+    fsync = on
+\end{verbatim}
+
+\subsubsection{Настройка логов}
+Включаем Write ahead log и настраиваем путь для сохранения.
+\begin{verbatim}
+    archive_mode = on
+    archive_command = 'mkdir -p $HOME/study/u02/gsd65 && cp %p $HOME/study/u02/gsd65/%f'
+\end{verbatim}
+\\ \\ 
+csvlog - формат логов (csv файл). Чтобы csvlog исправно работал нужно включить logging\_controller, а для его корректной работы необходимо включить stderr
+\begin{verbatim}
+    log_destination = 'csvlog, stderr'
+\end{verbatim}
+\\ \\ 
+Включаем сборщик сообщений. фоновый процесс, который собирает отправленные в stderr сообщения и перенаправляет их в журнальные файлы
+\begin{verbatim}
+    logging_collector = true
+    log_directory = log
+    log_min_messages = error
+\end{verbatim}
+\\ \\
+Указываем уровень и дополнительные настройки логов
+\begin{verbatim}
+    log_min_messages = error
+    log_disconnections = on
+    log_duration = on
+\end{verbatim}
+
+\section{Дополнительные табличные пространства и наполнение}
+Создаем директории для новых таблих пространств. Каталог должен быть пустым и принадлежать пользователю ОС, под которым запущен PostgreSQL.
+\begin{verbatim}
+    mkdir -p $HOME/u03/gsd65
+    mkdir -p $HOME/u04/gsd65
+    mkdir -p $HOME/u05/gsd65
+\end{verbatim}
+\\ \\ 
+Подключаемся к нашему серверу
+\begin{verbatim}
+    psql -p 9006 -u postgres0 postgres
+\end{verbatim}
+\\ \\ 
+Создаем необходимые табличные пространства. 
+Создавать табличное пространство должен суперпользователь базы данных, но после этого можно разрешить обычным пользователям его использовать. После создания можно проверить успешность командой db
+\begin{verbatim}
+    CREATE TABLESPACE u03_gsd65 LOCATION '/var/db/postgres0/u03/gsd65';
+    CREATE TABLESPACE u04_gsd65 LOCATION '/var/db/postgres0/u04/gsd65';
+    CREATE TABLESPACE u05_gsd65 LOCATION '/var/db/postgres0/u05/gsd65';
+    \db
+\end{verbatim}
+\\ \\ 
+На основе template0 создаем новую базу данных \textbf{greatercapybara}
+\begin{verbatim}
+    createdb -p 9006 -T template1 greatercapybara
+\end{verbatim}
+\\ \\ 
+Создаем тестовые таблицы. Для указания табличного пространства можно использовать TABLESPACE, а можно использовать параметр default\_tablespace 
+\begin{verbatim}
+    CREATE TABLE xxx ( id int primary key, name text ) TABLESPACE u03_gsd65;
+    CREATE TABLE yyy ( id int primary key, name text, xxx_id int references xxx(id)) TABLESPACE u04_gsd65;
+    CREATE TABLE zzz ( id int primary key, name text, yyy_id int references yyy(id)) TABLESPACE u05_gsd65;
+\end{verbatim}
+Создаем тестового пользователя и выдаем необходимые права
+\begin{verbatim}
+    CREATE USER s000000 WITH PASSWORD '1111';
+    GRANT CONNECT ON DATABASE greatercapybara TO s000000;
+    GRANT CREATETABLE ON SCHEMA public TO s000000;
+
+    GRANT INSERT on xxx,yyy,zzz TO s000000;
+\end{verbatim}
+Наполнение данными
+\begin{verbatim}
+    psql -U s000000 -d greatercapybara
+    
+    INSERT INTO xxx (id, name)
+    VALUES (1, 'name1'), (2, 'name2'), (3, 'name3');
+    
+    INSERT INTO yyy (id, name, xxx_id)
+    VALUES (1, 'name4', 1), (2, 'name5', 2);
+
+    INSERT INTO zzz (id, name, yyy_id)
+    VALUES (1, 'name6', 1);
+\end{verbatim}
+Список всех табличных пространств кластера и содержащиеся в них объекты
+\begin{verbatim}
+    SELECT ts.spcname AS tablespace_name, NULL AS table_name, NULL AS object_type
+    FROM pg_tablespace ts
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS table_name, 'table' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+    WHERE c.relkind = 'r'
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS index_name, 'index' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+            JOIN pg_index i ON c.oid = i.indexrelid
+    UNION ALL
+    SELECT ts.spcname AS tablespace_name, c.relname AS sequence_name, 'sequence' AS object_type
+    FROM pg_tablespace ts
+            JOIN pg_class c ON ts.oid = c.reltablespace
+    WHERE c.relkind = 'S'
+    ORDER BY tablespace_name, table_name;
+\end{verbatim}
+
+\end{document}
