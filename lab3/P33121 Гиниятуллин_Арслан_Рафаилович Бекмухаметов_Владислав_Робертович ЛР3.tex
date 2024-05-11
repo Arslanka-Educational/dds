@@ -1,149 +1,83 @@
-\documentclass{article}
+Last login: Thu May  9 19:33:10 on ttys019
+WARNING: The -K and -A flags are deprecated and have been replaced
+         by the --apple-use-keychain and --apple-load-keychain
+         flags, respectively.  To suppress this warning, set the
+         environment variable APPLE_SSH_ADD_BEHAVIOR as described in
+         the ssh-add(1) manual page.
+Identity added: /Users/bekmvlad27/.ssh/id_rsa (bekmvlad27@I111664979)
+Store path is not specified, using last mounted: /Users/bekmvlad27/.arc/store
+/Users/bekmvlad27/arcadia/ is already mounted
 
-\usepackage[utf8]{inputenc}
-\usepackage[russian]{babel}
-\usepackage[a4paper, margin=1in]{geometry}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{wrapfig}
-\usepackage{multirow}
-\usepackage{mathtools}
-\usepackage{pgfplots}
-\usepackage{pgfplotstable}
-\usepackage{setspace}
-\usepackage{changepage}
-\usepackage{caption}
-\usepackage{csquotes}
-\usepackage{hyperref}
-\usepackage{listings}
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+I111664979:~ bekmvlad27$ clear
+I111664979:~ bekmvlad27$ subl --help
+Sublime Text build 4169
 
-\pgfplotsset{compat=1.18}
-\hypersetup{
-  colorlinks = true,
-  linkcolor  = blue,
-  filecolor  = magenta,      
-  urlcolor   = darkgray,
-  pdftitle   = ddb-report-2-giniiatullin-arslan-p33131,
-}
+Usage: subl [arguments] [files]         Edit the given files
+   or: subl [arguments] [directories]   Open the given directories
+   or: subl [arguments] -- [files]      Edit files that may start with '-'
+   or: subl [arguments] -               Edit stdin
+   or: subl [arguments] - >out          Edit stdin and write the edit to stdout
 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+Arguments:
+  --project <project>:    Load the given project
+  --command <command>:    Run the given command
+  -n or --new-window:     Open a new window
+  --launch-or-new-window: Only open a new window if the application is open
+  -a or --add:            Add folders to the current window
+  -w or --wait:           Wait for the files to be closed before returning
+  -b or --background:     Don't activate the application
+  -s or --stay:           Keep the application activated after closing the file
+  --safe-mode:            Launch using a sandboxed (clean) environment
+  -h or --help:           Show help (this message) and exit
+  -v or --version:        Show version and exit
 
-\lstdefinestyle{codestyle}{
-  backgroundcolor=\color{backcolour},   
-  commentstyle=\color{codegreen},
-  keywordstyle=\color{magenta},
-  numberstyle=\tiny\color{codegray},
-  stringstyle=\color{codepurple},
-  basicstyle=\ttfamily\footnotesize,
-  breakatwhitespace=false,         
-  breaklines=true,                 
-  captionpos=b,                    
-  keepspaces=true,                 
-  numbers=left,                    
-  numbersep=5pt,                  
-  showspaces=false,                
-  showstringspaces=false,
-  showtabs=false,                  
-  tabsize=2
-}
+--wait is implied if reading from stdin. Use --stay to not switch back
+to the terminal when a file is closed (only relevant if waiting for a file).
 
-\lstset{style=codestyle}
+Filenames may be given a :line or :line:column suffix to open at a specific
+location.
 
-\begin{document}
+I111664979:~ bekmvlad27$ subl --help
+Sublime Text build 4169
 
-\begin{titlepage}
-    \begin{center}
-        \begin{spacing}{1.4}
-            \large{Университет ИТМО} \\
-            \large{Факультет программной инженерии и компьютерной техники} \\
-        \end{spacing}
-        \vfill
-        \textbf{
-            \huge{Распределённые системы хранения данных.} \\
-            \huge{Лабораторная работа №3.} \\
-        }
-    \end{center}
-    \vfill
-    \begin{center}
-        \begin{tabular}{r l}
-            Группа:        & P33121                      \\
-            Студенты:       & Гиниятуллин Арслан Рафаилович \\
-                            & Бекмухаметов Владислав Робертович   \\
-            Преподаватель: & Афанасьев Дмитрий Борисович \\
-            Вариант:       & 721 \\
-        \end{tabular}
-    \end{center}
-    \vfill
-    \begin{center}
-        \begin{large}
-            2024
-        \end{large}
-    \end{center}
-\end{titlepage}
+Usage: subl [arguments] [files]         Edit the given files
+   or: subl [arguments] [directories]   Open the given directories
+   or: subl [arguments] -- [files]      Edit files that may start with '-'
+   or: subl [arguments] -               Edit stdin
+   or: subl [arguments] - >out          Edit stdin and write the edit to stdout
 
-\section*{Ключевые слова}
+Arguments:
+  --project <project>:    Load the given project
+  --command <command>:    Run the given command
+  -n or --new-window:     Open a new window
+  --launch-or-new-window: Only open a new window if the application is open
+  -a or --add:            Add folders to the current window
+  -w or --wait:           Wait for the files to be closed before returning
+  -b or --background:     Don't activate the application
+  -s or --stay:           Keep the application activated after closing the file
+  --safe-mode:            Launch using a sandboxed (clean) environment
+  -h or --help:           Show help (this message) and exit
+  -v or --version:        Show version and exit
 
-База данных, PostgreSQL, резервное копирование, повреждение данных
+--wait is implied if reading from stdin. Use --stay to not switch back
+to the terminal when a file is closed (only relevant if waiting for a file).
 
-\tableofcontents
+Filenames may be given a :line or :line:column suffix to open at a specific
+location.
 
-\section{Цель работы}
-
-Настроить процедуру периодического резервного копирования базы данных, сконфигурированной в ходе выполнения предыдущей лабораторной работы, а также разработать и отладить сценарии восстановления в случае сбоев.
-
-\section{Текст задания}
-
-\subsection{Описание}
-
-\subsubsection{Этап 1. Резервное копирование}
-        \begin{itemize}
-            \item Настроить резервное копирование с основного узла на резервный следующим образом: Первоначальная полная копия + непрерывное архивирование. Включить для СУБД режим архивирования WAL; настроить копирование WAL (scp) на резервный узел; создать первоначальную резервную копию (pg\_basebackup), скопировать на резервный узел (rsync).
-            \item Подсчитать, каков будет объем резервных копий спустя месяц работы системы, исходя из следующих условий:
-                \begin{itemize}
-                    \item Средний объем новых данных в БД за сутки: 850МБ.
-                    \item Средний объем измененных данных за сутки: 600МБ.
-                \end{itemize}
-            \item Проанализировать результаты.
-        \end{itemize}
-\subsubsection{Этап 2. Потеря основного узла}
-Этот сценарий подразумевает полную недоступность основного узла. Необходимо восстановить работу СУБД на РЕЗЕРВНОМ узле, продемонстрировать успешный запуск СУБД и доступность данных.
-
-\subsubsection{Этап 3. Повреждение файлов БД}
-Этот сценарий подразумевает потерю данных (например, в результате сбоя диска или файловой системы) при сохранении доступности основного узла. Необходимо выполнить полное восстановление данных из резервной копии и перезапустить СУБД на ОСНОВНОМ узле.
-
-Ход работы:
-    \begin{itemize}
-        \item Симулировать сбой:
-            \begin{itemize}
-                \item удалить с диска директорию конфигурационных файлов СУБД со всем содержимым.
-            \end{itemize}
-        \item Проверить работу СУБД, доступность данных, перезапустить СУБД, проанализировать результаты.
-        \item Выполнить восстановление данных из резервной копии, учитывая следующее условие:
-            \begin{itemize}
-                \item исходное расположение директории PGDATA недоступно - разместить данные в другой директории и скорректировать конфигурацию.
-            \end{itemize}
-        \item Запустить СУБД, проверить работу и доступность данных, проанализировать результаты.
-    \end{itemize}
-\subsubsection{Этап 4. Логическое повреждение данных}
-Этот сценарий подразумевает частичную потерю данных (в результате нежелательной или ошибочной операции) при сохранении доступности основного узла. Необходимо выполнить восстановление данных на ОСНОВНОМ узле следующим способом:
-    \begin{itemize}
-        \item Генерация файла на резервном узле с помощью pg\_dump и последующее применение файла на основном узле.
-    \end{itemize}
-Ход работы:
-\begin{itemize}
-    \item В каждую таблицу базы добавить 2-3 новые строки, зафиксировать результат.
-    \item Зафиксировать время и симулировать ошибку:
-        \begin{itemize}
-            \item удалить любые две таблицы (DROP TABLE)
-        \end{itemize}
-    \item Продемонстрировать результат.
-    \item Выполнить восстановление данных указанным способом.
-    \item Продемонстрировать и проанализировать результат.
-\end{itemize}
-\subsection{Этапы выполнения работы}
-
-
-\end{document}
+I111664979:~ bekmvlad27$ cd Desktop/study/DSDS/
+I111664979:DSDS bekmvlad27$ ls
+dds postgre
+I111664979:DSDS bekmvlad27$ cd dds/
+I111664979:dds bekmvlad27$ ls
+LICENSE lab1    lab2    lab3
+I111664979:dds bekmvlad27$ cd lab
+-bash: cd: lab: No such file or directory
+I111664979:dds bekmvlad27$ cd lab3
+I111664979:lab3 bekmvlad27$ ls
+P33121 Гиниятуллин_Арслан_Рафаилович Бекмухаметов_Владислав_Робертович ЛР3.tex
+I111664979:lab3 bekmvlad27$ subl P33121\ Гиниятуллин_Арслан_Рафаилович\ Бекмухаметов_Владислав_Робертович\ ЛР3.tex
+I111664979:lab3 bekmvlad27$
