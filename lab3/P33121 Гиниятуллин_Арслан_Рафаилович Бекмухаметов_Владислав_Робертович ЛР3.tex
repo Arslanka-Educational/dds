@@ -155,9 +155,6 @@
     echo "archive_mode = on" >> postgresql.conf
     echo "archive_command = 'scp %p postgres1@pg121:/var/db/postgres1/u02/gsd65/%f'" 
     >> u01/gsd65/postgresql.conf
-<<<<<<< HEAD
-\end{verbatim}
-=======
 \end{verbatim} \\
 \begin{itemize}
     \item {\textit{wal\_level = replica} устанавливает уровень записи WAL на лидере, достаточный для резервного копирования с другого узла}
@@ -167,7 +164,6 @@
     }
 \end{itemize}
 \\
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Сохранение ssh ключа на резервный кластер.
 \begin{verbatim}
     ssh-keygen -t rsa
@@ -176,13 +172,6 @@
 Создание базового бекапа и настройка rsync для директории с файлами бекапа.
 
 \begin{verbatim}
-<<<<<<< HEAD
-    pg_ctl -D /var/db/postgres0/u07/gsd25 -l logfile start
-    pg_basebackup -P -Ft -p 9007 -X fetch -D backups
-    rsync --archive --verbose --progress --rsync-path=/usr/local/bin/rsync \
-    /var/db/postgres0/backups/ postgres1@pg121:/var/db/postgres1/backups 
-\end{verbatim}
-=======
     pg_ctl -D /var/db/postgres0/u01/gsd65 -l logfile start
     pg_basebackup -P -Ft -p 9006 -X fetch -D backups
     rsync --archive --verbose --progress --rsync-path=/usr/local/bin/rsync \
@@ -203,7 +192,6 @@ current\_backup\_data\_volume = 7.4МБ \\ \\
 total\_new\_data\_volume = 850МБ * 30 = 22.5ГБ \\
 total\_changed\_data\_volume = 600МБ * 30 = 18ГБ \\
 total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_volume \\ + total\_changed\_data\_volume = 40507,4МБ
->>>>>>> ca4c9af (Added step 4, fixed 1)
 
 \subsection{Этап 2}
 Восстановление работы СУБД на резервном узле
@@ -219,52 +207,30 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
     ln -s u04/gsd65 u01/gsd65/pg_tblspc/16385
     ln -s u05/gsd65 u01/gsd65/pg_tblspc/16386
 \end{verbatim}
-<<<<<<< HEAD
-Настраиваем restore\_command в postgresql.conf и расширяем памминг пользоваталей, так как пользователь изменился с postgres0 -> postgres1
-=======
 Настраиваем restore\_command в postgresql.conf и расширяем маппинг пользоваталей, так как пользователь изменился с postgres0 -> postgres1
->>>>>>> ca4c9af (Added step 4, fixed 1)
 
 \begin{verbatim}
     echo  "restore_command = 'cp /var/db/postgres1/u02/gsd65/%f %p'" 
     >> $HOME/u01/gsd65/postgresql.conf
     echo "postgres0 postgres1 s000000" >> $HOME/u01/gsd65/pg_ident.conf 
 \end{verbatim}
-<<<<<<< HEAD
-
-=======
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Создаем standby.signal для запуска СУБД в режиме standby
 \begin{verbatim}
     touch u01/gsd65/standy.signal
 \end{verbatim}
-<<<<<<< HEAD
-
-=======
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Запускаем
 \begin{verbatim}
     pg_ctl -D u01/gsd65 -l файл_журнала start
 \end{verbatim}
 
 \subsection{Этап 3}
-<<<<<<< HEAD
-Повреждение файлов бд и полное восстановление данных на основном узле с резервного. 
-
-=======
 Повреждение файлов бд и полное восстановление данных на основном узле с резервного. \\
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Симулируем сбой: удаляем с диска директорию конфигурационных файлов
 \begin{verbatim}
     rm -fr ~/u01/gsd65/*
     mkdir ~/u10/gsd65
     chmod 700 ~/u10/gsd65
-<<<<<<< HEAD
-\end{verbatim}
-
-=======
 \end{verbatim} \\
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Подтягиваем данные с резервного узла для восстановления
 \begin{verbatim}
     mkdir ~/new_backups
@@ -272,23 +238,14 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
     scp postgres1@pg121:/var/db/postgres1/backups/16384.tar ~/new_backups/
     scp postgres1@pg121:/var/db/postgres1/backups/16385.tar ~/new_backups/
     scp postgres1@pg121:/var/db/postgres1/backups/16386.tar ~/new_backups/
-<<<<<<< HEAD
-\end{verbatim}
-
-=======
 \end{verbatim} \\
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Восстанавливаем данные в других директориях
 \begin{verbatim}
     tar xvf ~/new_backups/base.tar -C ~/u10/gsd65
     tar xvf ~/new_backups/16384.tar -C ~/u03/gsd65
     tar xvf ~/new_backups/16385.tar -C ~/u04/gsd65
     tar xvf ~/new_backups/16386.tar -C ~/u05/gsd65
-<<<<<<< HEAD
-\end{verbatim}
-=======
 \end{verbatim} \\
->>>>>>> ca4c9af (Added step 4, fixed 1)
 Задаем команду для восстановления, создаем сигнал для запуска в recovery mod и запускаем сервер
 \begin{verbatim}
     echo "restore_command = 'scp postgres1@pg121:/var/db/postgres1/u02/gsd65/%f %p'" >> $HOME/u10/gsd65/postgresql.conf
@@ -299,36 +256,6 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
 
 \subsection{Этап 4}
 
-<<<<<<< HEAD
-Мы крутые все сделали
-
-\begin{verbatim}
-greatercapybara=> select now();
-              now
--------------------------------
- 2024-04-29 15:02:50.933467+03
-(1 строка)
-
-Создадим dump на резервном сервере
-
-mkdir ~/dumps
-pg_dump  -p 9007 -d greatercapybara -U postgres0 -Fc > ~/dumps/db-$(date +"%m-%d-%Y-%H-%M-%S").dump
-
-Отправим его на основной
-
-rsync --archive ~/dumps postgres0@pg106:
-\end{verbatim}
-    greatercapybara=> INSERT INTO tst values(123);
-    greatercapybara=> INSERT INTO tst values(111);
-    greatercapybara=> INSERT INTO tst values(222);
-    greatercapybara=> select * from tst;
-     id
-    -----
-     123
-     111
-     222
-    (3 строки)
-=======
 Вставим строки на основном узле
 
 \begin{verbatim}
@@ -417,5 +344,4 @@ rsync --archive ~/dumps postgres0@pg106:
     (1 строка)
 \end{verbatim}
 
->>>>>>> ca4c9af (Added step 4, fixed 1)
 \end{document}
