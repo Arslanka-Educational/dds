@@ -1,0 +1,348 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{setspace}
+\usepackage{changepage}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.18}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue,
+  filecolor  = magenta,      
+  urlcolor   = darkgray,
+  pdftitle   = ddb-report-2-giniiatullin-arslan-p33131,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=codestyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \begin{spacing}{1.4}
+            \large{Университет ИТМО} \\
+            \large{Факультет программной инженерии и компьютерной техники} \\
+        \end{spacing}
+        \vfill
+        \textbf{
+            \huge{Распределённые системы хранения данных.} \\
+            \huge{Лабораторная работа №3.} \\
+        }
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{tabular}{r l}
+            Группа:        & P33121                      \\
+            Студенты:       & Гиниятуллин Арслан Рафаилович \\
+                            & Бекмухаметов Владислав Робертович   \\
+            Преподаватель: & Афанасьев Дмитрий Борисович \\
+            Вариант:       & 721 \\
+        \end{tabular}
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{large}
+            2024
+        \end{large}
+    \end{center}
+\end{titlepage}
+
+\section*{Ключевые слова}
+
+База данных, PostgreSQL, резервное копирование, повреждение данных
+
+\tableofcontents
+
+\section{Цель работы}
+
+Настроить процедуру периодического резервного копирования базы данных, сконфигурированной в ходе выполнения предыдущей лабораторной работы, а также разработать и отладить сценарии восстановления в случае сбоев.
+
+\section{Текст задания}
+
+\subsection{Описание}
+
+\subsubsection{Этап 1. Резервное копирование}
+        \begin{itemize}
+            \item Настроить резервное копирование с основного узла на резервный следующим образом: Первоначальная полная копия + непрерывное архивирование. Включить для СУБД режим архивирования WAL; настроить копирование WAL (scp) на резервный узел; создать первоначальную резервную копию (pg\_basebackup), скопировать на резервный узел (rsync).
+            \item Подсчитать, каков будет объем резервных копий спустя месяц работы системы, исходя из следующих условий:
+                \begin{itemize}
+                    \item Средний объем новых данных в БД за сутки: 850МБ.
+                    \item Средний объем измененных данных за сутки: 600МБ.
+                \end{itemize}
+            \item Проанализировать результаты.
+        \end{itemize}
+\subsubsection{Этап 2. Потеря основного узла}
+Этот сценарий подразумевает полную недоступность основного узла. Необходимо восстановить работу СУБД на РЕЗЕРВНОМ узле, продемонстрировать успешный запуск СУБД и доступность данных.
+
+\subsubsection{Этап 3. Повреждение файлов БД}
+Этот сценарий подразумевает потерю данных (например, в результате сбоя диска или файловой системы) при сохранении доступности основного узла. Необходимо выполнить полное восстановление данных из резервной копии и перезапустить СУБД на ОСНОВНОМ узле.
+
+Ход работы:
+    \begin{itemize}
+        \item Симулировать сбой:
+            \begin{itemize}
+                \item удалить с диска директорию конфигурационных файлов СУБД со всем содержимым.
+            \end{itemize}
+        \item Проверить работу СУБД, доступность данных, перезапустить СУБД, проанализировать результаты.
+        \item Выполнить восстановление данных из резервной копии, учитывая следующее условие:
+            \begin{itemize}
+                \item исходное расположение директории PGDATA недоступно - разместить данные в другой директории и скорректировать конфигурацию.
+            \end{itemize}
+        \item Запустить СУБД, проверить работу и доступность данных, проанализировать результаты.
+    \end{itemize}
+\subsubsection{Этап 4. Логическое повреждение данных}
+Этот сценарий подразумевает частичную потерю данных (в результате нежелательной или ошибочной операции) при сохранении доступности основного узла. Необходимо выполнить восстановление данных на ОСНОВНОМ узле следующим способом:
+    \begin{itemize}
+        \item Генерация файла на резервном узле с помощью pg\_dump и последующее применение файла на основном узле.
+    \end{itemize}
+Ход работы:
+\begin{itemize}
+    \item В каждую таблицу базы добавить 2-3 новые строки, зафиксировать результат.
+    \item Зафиксировать время и симулировать ошибку:
+        \begin{itemize}
+            \item удалить любые две таблицы (DROP TABLE)
+        \end{itemize}
+    \item Продемонстрировать результат.
+    \item Выполнить восстановление данных указанным способом.
+    \item Продемонстрировать и проанализировать результат.
+\end{itemize}
+\section{Этапы выполнения работы}
+
+Основной кластер: pg105
+Резервный кластер: pg121
+
+\subsection{Этап 1}
+Базовая настройка основного кластера
+\begin{verbatim}
+    echo "wal_level = replica" >> postgresql.conf
+    echo "archive_mode = on" >> postgresql.conf
+    echo "archive_command = 'scp %p postgres1@pg121:/var/db/postgres1/u02/gsd65/%f'" 
+    >> u01/gsd65/postgresql.conf
+\end{verbatim} \\
+\begin{itemize}
+    \item {\textit{wal\_level = replica} устанавливает уровень записи WAL на лидере, достаточный для резервного копирования с другого узла}
+    \item {\textit{archive\_mode = on} указывает, что полные сегменты WAL передаются в хранилище архива командой \textit{archive\_command}}
+    \item {\textit{archive\_command = 'scp \%p postgres1@pg121:/var/db/postgres1/u02/gsd65/\%f'} определяет команду, которая будет выполняться над завершенными WAL сегментами для архивации.
+    (Любое вхождение \%p в этой строке заменяется путём архивируемого файла, а вхождение \%f заменяется только его именем.)
+    }
+\end{itemize}
+\\
+Сохранение ssh ключа на резервный кластер.
+\begin{verbatim}
+    ssh-keygen -t rsa
+    ssh-copy-id -i ~/.ssh/id_rsa.pub postgres1@pg121
+\end{verbatim}
+Создание базового бекапа и настройка rsync для директории с файлами бекапа.
+
+\begin{verbatim}
+    pg_ctl -D /var/db/postgres0/u01/gsd65 -l logfile start
+    pg_basebackup -P -Ft -p 9006 -X fetch -D backups
+    rsync --archive --verbose --progress --rsync-path=/usr/local/bin/rsync \
+    /var/db/postgres0/backups/ postgres1@pg121:/var/db/postgres1/backups 
+\end{verbatim} \\
+Подсчитаем, каков будет объем резервных копий спустя месяц работы системы, исходя из следующих условий:
+    \begin{itemize}
+        \item Средний объем новых данных в БД за сутки: 850МБ.
+        \item Средний объем измененных данных за сутки: 600МБ.
+    \end{itemize} \\
+Для начала посчитаем объем бекапа
+\begin{verbatim}
+    [postgres0@pg105 ~/backups]$ du -sh
+    7,4M	.
+\end{verbatim} \\
+current\_backup\_data\_volume = 7.4МБ \\ \\
+Далее экстраполируем средний объём новых данных за месяц \\ \\
+total\_new\_data\_volume = 850МБ * 30 = 22.5ГБ \\
+total\_changed\_data\_volume = 600МБ * 30 = 18ГБ \\
+total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_volume \\ + total\_changed\_data\_volume = 40507,4МБ
+
+\subsection{Этап 2}
+Восстановление работы СУБД на резервном узле
+\begin{verbatim}
+    tar xvf backups/base.tar -C $HOME/u01/gsd65
+    tar xvf backups/16384.tar -C  $HOME/u03/gsd65
+    tar xvf backups/16385.tar -C $HOME/u04/gsd65
+    tar xvf backups/16386.tar -C $HOME/u05/gsd65
+\end{verbatim}
+
+\begin{verbatim}
+    ln -s u03/gsd65 u01/gsd65/pg_tblspc/16384
+    ln -s u04/gsd65 u01/gsd65/pg_tblspc/16385
+    ln -s u05/gsd65 u01/gsd65/pg_tblspc/16386
+\end{verbatim}
+Настраиваем restore\_command в postgresql.conf и расширяем маппинг пользоваталей, так как пользователь изменился с postgres0 -> postgres1
+
+\begin{verbatim}
+    echo  "restore_command = 'cp /var/db/postgres1/u02/gsd65/%f %p'" 
+    >> $HOME/u01/gsd65/postgresql.conf
+    echo "postgres0 postgres1 s000000" >> $HOME/u01/gsd65/pg_ident.conf 
+\end{verbatim}
+Создаем standby.signal для запуска СУБД в режиме standby
+\begin{verbatim}
+    touch u01/gsd65/standy.signal
+\end{verbatim}
+Запускаем
+\begin{verbatim}
+    pg_ctl -D u01/gsd65 -l файл_журнала start
+\end{verbatim}
+
+\subsection{Этап 3}
+Повреждение файлов бд и полное восстановление данных на основном узле с резервного. \\
+Симулируем сбой: удаляем с диска директорию конфигурационных файлов
+\begin{verbatim}
+    rm -fr ~/u01/gsd65/*
+    mkdir -p ~/u10/gsd65
+    chmod 700 ~/u10/gsd65
+\end{verbatim} \\
+Подтягиваем данные с резервного узла для восстановления
+\begin{verbatim}
+    mkdir ~/new_backups
+    scp postgres1@pg121:/var/db/postgres1/backups/base.tar ~/new_backups/
+    scp postgres1@pg121:/var/db/postgres1/backups/16384.tar ~/new_backups/
+    scp postgres1@pg121:/var/db/postgres1/backups/16385.tar ~/new_backups/
+    scp postgres1@pg121:/var/db/postgres1/backups/16386.tar ~/new_backups/
+\end{verbatim} \\
+Восстанавливаем данные в других директориях
+\begin{verbatim}
+    tar xvf ~/new_backups/base.tar -C ~/u10/gsd65
+    tar xvf ~/new_backups/16384.tar -C ~/u03/gsd65
+    tar xvf ~/new_backups/16385.tar -C ~/u04/gsd65
+    tar xvf ~/new_backups/16386.tar -C ~/u05/gsd65
+\end{verbatim} \\
+Задаем команду для восстановления, создаем сигнал для запуска в recovery mod и запускаем сервер
+\begin{verbatim}
+    echo "restore_command = 'scp postgres1@pg121:/var/db/postgres1/u02/gsd65/%f %p'"
+    >> $HOME/u10/gsd65/postgresql.conf
+    touch $HOME/u10/gsd65/recovery.signal
+    pg_ctl -D $HOME/u10/gsd65 -l logfile start
+    echo "postgres0 postgres1 s000000" >> $HOME/u01/gsd65/pg_ident.conf 
+\end{verbatim}
+
+\subsection{Этап 4}
+
+Вставим строки на основном узле
+
+\begin{verbatim}
+    greatercapybara=# INSERT INTO wolf (name, type, age) VALUES ('name_1', 'default', 1);
+    INSERT 0 1
+    greatercapybara=# INSERT INTO wolf (name, type, age) VALUES ('name_2', 'default', 2);
+    INSERT 0 1
+    greatercapybara=# INSERT INTO wolf (name, type, age) VALUES ('name_3', 'default', 3);
+    INSERT 0 1
+    greatercapybara=# select * from wolf;
+     id |  name  |  type   | age
+    ----+--------+---------+-----
+      1 | name_1 | default |   1
+      2 | name_2 | default |   2
+      3 | name_3 | default |   3
+    (3 строки)
+\end{verbatim} \\
+Проверим их наличие на резервном узле
+
+\begin{verbatim}
+    greatercapybara=# select * from wolf;
+     id |  name  |  type   | age
+    ----+--------+---------+-----
+      1 | name_1 | default |   1
+      2 | name_2 | default |   2
+      3 | name_3 | default |   3
+    (3 строки)
+\end{verbatim} \\
+Фиксируем время
+
+\begin{verbatim}
+    greatercapybara=# select now();
+                now
+    -------------------------------
+     2024-04-28 20:15:12.259434+03
+    (1 строка)
+\end{verbatim} \\
+Создадим dump на резервном сервере
+
+\begin{verbatim}
+    $ mkdir ~/dumps
+    $ pg_dump -p 9006 -d greatercapybara -U postgres0 -Fc > ~/dumps/db-$(date +"%m-%d-%Y-%H-%M-%S").dump
+\end{verbatim} \\
+Отправим его на основной
+
+\begin{verbatim}
+    $ rsync --archive ~/dumps postgres0@pg105:
+\end{verbatim} \\
+Правим данные
+
+\begin{verbatim}
+    greatercapybara=# INSERT INTO wolf (name, type, age) VALUES ('corrupted_name', 'default', 4);
+    INSERT 0 1
+    greatercapybara=# INSERT INTO wolf (name, type, age) VALUES ('corrupted_name_2', 'default', 4);
+    INSERT 0 1
+    greatercapybara=# select * from wolf;
+     id |       name       |  type   | age
+    ----+------------------+---------+-----
+      1 | name_1           | default |   1
+      2 | name_2           | default |   2
+      3 | name_3           | default |   3
+      4 | corrupted_name   | default |   4
+      5 | corrupted_name_2 | default |   4
+    (5 строк)
+\end{verbatim} \\
+Восстановимся на основном сервере из dump-а
+
+\begin{verbatim}
+    $ pg_restore -p 9006 -d greatercapybara -c db-04-28-2024-20-34-55.dump
+\end{verbatim} \\
+Проверим данные
+
+\begin{verbatim}
+    greatercapybara=# select * from wolf;
+     id |  name  |  type   | age
+    ----+--------+---------+-----
+      1 | name_1 | default |   1
+      2 | name_2 | default |   2
+      3 | name_3 | default |   3
+    (3 строки)
+    
+    greatercapybara=# select now();
+                  now
+    -------------------------------
+     2024-04-28 20:38:42.713888+03
+    (1 строка)
+\end{verbatim}
+
+\end{document}
