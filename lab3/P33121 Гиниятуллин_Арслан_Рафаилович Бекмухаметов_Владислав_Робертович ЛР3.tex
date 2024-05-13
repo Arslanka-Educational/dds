@@ -228,7 +228,7 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
 Симулируем сбой: удаляем с диска директорию конфигурационных файлов
 \begin{verbatim}
     rm -fr ~/u01/gsd65/*
-    mkdir ~/u10/gsd65
+    mkdir -p ~/u10/gsd65
     chmod 700 ~/u10/gsd65
 \end{verbatim} \\
 Подтягиваем данные с резервного узла для восстановления
