@@ -248,7 +248,8 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
 \end{verbatim} \\
 Задаем команду для восстановления, создаем сигнал для запуска в recovery mod и запускаем сервер
 \begin{verbatim}
-    echo "restore_command = 'scp postgres1@pg121:/var/db/postgres1/u02/gsd65/%f %p'" >> $HOME/u10/gsd65/postgresql.conf
+    echo "restore_command = 'scp postgres1@pg121:/var/db/postgres1/u02/gsd65/%f %p'"
+    >> $HOME/u10/gsd65/postgresql.conf
     touch $HOME/u10/gsd65/recovery.signal
     pg_ctl -D $HOME/u10/gsd65 -l logfile start
     echo "postgres0 postgres1 s000000" >> $HOME/u01/gsd65/pg_ident.conf 
@@ -297,7 +298,7 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
 
 \begin{verbatim}
     $ mkdir ~/dumps
-    $ pg_dump  -p 9006 -d greatercapybara -U postgres0 -Fc > ~/dumps/db-$(date +"%m-%d-%Y-%H-%M-%S").dump
+    $ pg_dump -p 9006 -d greatercapybara -U postgres0 -Fc > ~/dumps/db-$(date +"%m-%d-%Y-%H-%M-%S").dump
 \end{verbatim} \\
 Отправим его на основной
 
@@ -324,7 +325,7 @@ total\_backup\_data\_volume = current\_backup\_data\_volume + total\_new\_data\_
 Восстановимся на основном сервере из dump-а
 
 \begin{verbatim}
-    $ pg_restore -p 9067 -d yellowfox -c db-04-28-2024-20-34-55.dump
+    $ pg_restore -p 9006 -d greatercapybara -c db-04-28-2024-20-34-55.dump
 \end{verbatim} \\
 Проверим данные
 
