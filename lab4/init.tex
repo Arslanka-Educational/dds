@@ -1,0 +1,225 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{setspace}
+\usepackage{changepage}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pgfplotsset{compat=1.18}
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = blue,
+  filecolor  = magenta,      
+  urlcolor   = darkgray,
+  pdftitle   = ddb-report-2-giniiatullin-arslan-p33131,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.99,0.99,0.99}
+
+\lstdefinestyle{codestyle}{
+  backgroundcolor=\color{backcolour},   
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=codestyle}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \begin{spacing}{1.4}
+            \large{Университет ИТМО} \\
+            \large{Факультет программной инженерии и компьютерной техники} \\
+        \end{spacing}
+        \vfill
+        \textbf{
+            \huge{Распределённые системы хранения данных.} \\
+            \huge{Лабораторная работа №4.} \\
+        }
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{tabular}{r l}
+            Группа:        & P33121                      \\
+            Студенты:       & Гиниятуллин Арслан Рафаилович \\
+                            & Бекмухаметов Владислав Робертович   \\
+            Преподаватель: & Афанасьев Дмитрий Борисович \\
+            Вариант:       & 661 \\
+        \end{tabular}
+    \end{center}
+    \vfill
+    \begin{center}
+        \begin{large}
+            2024
+        \end{large}
+    \end{center}
+\end{titlepage}
+
+\section*{Ключевые слова}
+
+База данных, PostgreSQL, резервное копирование, повреждение данных
+
+\tableofcontents
+
+\section{Цель работы}
+
+ознакомиться с методами и средствами построения отказоустойчивых решений на базе СУБД Postgres; получить практические навыки восстановления работы системы после отказа.
+
+\section{Требования к выполнению работы}
+
+    \begin{itemize}
+        \item В качестве хостов использовать одинаковые виртуальные машины.
+        \item В первую очередь необходимо обеспечить сетевую связность между ВМ.
+        \item Для подключения к СУБД (например, через psql), использовать отдельную виртуальную или физическую машину.
+        \item Демонстрировать наполнение базы и доступ на запись на примере не менее, чем двух таблиц, столбцов, строк, транзакций и клиентских сессий.
+    \end{itemize}
+
+\section{Текст задания}
+
+    \subsection{Этап 1. Конфигурация}
+        Настроить репликацию postgres на трёх узлах: A - основной, B и C - резервные. Для управления использовать pgpool-II. Репликация с A на B синхронная. Репликация с A на C асинхронная. Продемонстрировать, что новые данные реплицируются на B в синхронном режиме, а на C с задержкой.
+    \subsection{Этап 2. Симуляция и обработка сбоя}
+        \subsubsection{Подготовка:}
+            \begin{itemize}
+                \item Установить несколько клиентских подключений к СУБД.
+                \item Продемонстрировать состояние данных и работу клиентов в режиме чтение/запись.
+            \end{itemize}
+        \subsubsection{Сбой:}
+            Симулировать неожиданное отключение основного узла - выполнить Power Off виртуальной машины.
+        \subsubsection{Обработка:}
+            \begin{itemize}
+                \item Найти и продемонстрировать в логах релевантные сообщения об ошибках.
+                \item Выполнить переключение (failover) на резервный сервер.
+                \item Продемонстрировать состояние данных и работу клиентов в режиме чтение/запись.
+            \end{itemize}
+    
+    \subsection{Восстановление}
+        \begin{itemize}
+            \item Восстановить работу основного узла - откатить действие, выполненное с виртуальной машиной на этапе 2.2.
+            \item Актуализировать состояние базы на основном узле - накатить все изменения данных, выполненные на этапе 2.3.
+            \item Восстановить исправную работу узлов в исходной конфигурации (в соответствии с этапом 1).
+            \item Продемонстрировать состояние данных и работу клиентов в режиме чтение/запись.
+        \end{itemize}
+        
+\section{Этапы выполнения работы}
+    Кластер A: pg-A \\
+    Кластер B: pg-B \\
+    Кластер С: pg-C
+
+\subsection{Конфигурация}
+Для начала нужно выполнить базовую настройку основного кластера pg (pg-A)
+\begin{verbatim}
+    initdb --pgdata=pg-A
+    echo "port=9090" >> pg-A/postgresql.conf
+    echo "listen_addresses = '*'" >> pg-A/postgresql.conf
+    echo "cluster_name = 'pg_A'" >> pg-A/postgresql.conf
+\end{verbatim}
+
+Создадим отдельного пользователя который будет отвечать за репликацию данных.
+
+\begin{verbatim}
+    pg_ctl -D pg-A -l pg-A.log start
+    psql --port=9090 postgres
+
+    create user repuser replication;
+\end{verbatim}
+
+Обновим конфигурацию pg\_hba.conf
+
+\begin{verbatim}
+    echo "host all repuser 127.0.0.1/32 trust" >> pg-1/pg_hba.conf
+    pg_ctl -D pg-A -l pg-A.log restart
+\end{verbatim}
+
+Сделаем бекап основого кластера, для дальнейшей репликации. После выполнения следующего шага, на узле pg-B будет настроена асинхронная потоковая репликация данных.
+
+\begin{verbatim}
+    pg_basebackup --pgdata=pg-A -R --port=9090 -U repuser
+    
+    echo "port=9091" >> pg-B/postgresql.conf
+    echo "cluster_name = 'pg_B'" >> pg-B/postgresql.conf
+
+    pg_ctl -D $lab4/pg-B
+\end{verbatim}
+
+Те же действия необходимо повторить для репликации данных на узел pg-C.
+
+\begin{verbatim}
+    pg_basebackup --pgdata=pg-C -R --port=9090
+    echo "port=9092" >> pg-C/postgresql.conf
+    echo "cluster_name = 'pg_C'" >> pg-C/postgresql.conf
+    echo "primary_conninfo = 'user=repuser port=9090 application_name=replica'" >> pg-C/postgresql.conf
+\end{verbatim}
+
+По стандарту, потоковая репликация является асинхронной, чтобы сделать ее синхронной необходимо указать следующий параметр и сделать reload основного кластера
+
+\begin{verbatim}
+    echo "synchronous_standby_names = 'pg-C'" >> pg-A/postgresql.conf
+    pg_ctl -D pg-A -l pg-A.log reload
+\end{verbatim}
+
+Настройка pgpool будет выглядеть следующим образом (указаны только те параметры, которые необходимо изменить)
+
+\begin{verbatim}
+    listen_addresses = '*'
+    
+    backend_hostname0 = 'localhost'
+    backend_port0 = 9090
+    backend_weight0 = 0
+    backend_data_directory0 = '/pg-A/'
+
+    backend_hostname1 = 'localhost'
+    backend_port1 = 9091
+    backend_weight1 = 1
+    backend_data_directory1 = '/pg-B/'
+
+    backend_hostname2 = 'localhost'
+    backend_port2 = 9092
+    backend_weight2 = 2
+    backend_data_directory2 = '/pg-C/'
+
+    log_statement = on
+    log_per_node_statement = on
+
+    sr_check_user = 'repuser'
+    health_check_period = 10
+    health_check_user = 'repuser'
+\end{verbatim}
+
+Теперь все наши select запросы будут распределяться по кластерам в зависимости от "весов", а остальные запросы будут уходить на кластер 0.
+
+\subsection{Симуляция и обработка сбоя}
+
+\subsection{Восстановление}
+
+
+\end{document}
