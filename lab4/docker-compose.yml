@@ -1,0 +1,158 @@
+version: "3.8"
+
+services:
+  postgres_primary:
+    image: postgres:15-alpine
+    container_name: postgres-container-primary
+    expose:
+      - "5432"
+    ports:
+      - "6666:5432"
+    volumes:
+      - db-volume-primary:/data
+      - ./pg_node_primary/postgresql.conf:/postgresql.conf
+      - failover_volume:/failover_dir
+      - ./pg_node_primary/start.sh:/start.sh
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+      POSTGRES_HOST_AUTH_METHOD: "md5\nhost replication all all md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    command: |
+      postgres -c 'config_file=/postgresql.conf'
+    networks:
+      - pg-network
+
+  postgres_replica:
+    image: postgres:15-alpine
+    container_name: postgres-container-replica-1
+    expose:
+      - "5432"
+    ports:
+      - "7777:5432"
+    volumes:
+      - db-volume-replica-1:/data/postgres
+      - failover_volume:/failover_dir
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: password
+      PGDATA: /data/postgres
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/data/postgres -R --slot=replication_slot_1 -C --checkpoint=fast --host=postgres_primary --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo "cluster_name=pg_1" >> /data/postgres/postgresql.conf
+      echo 'Backup done, starting replica...'
+      bash -c `echo -e \"promote_trigger_file = '/failover_dir/down.trg'\" >> /data/postgres/postgresql.conf`
+      chown -Rf postgres:postgres /data/postgres
+      chmod -R 700 /data/postgres
+      su -p postgres -c postgres
+      "
+    networks:
+      - pg-network
+    depends_on:
+      - postgres_primary
+
+  postgres_replica_2:
+    image: postgres:15-alpine
+    container_name: postgres-container-replica-2
+    expose:
+      - "5432"
+    ports:
+      - "8888:5432"
+    volumes:
+      - db-volume-replica-2:/data/postgres
+      - failover_volume:/failover_dir
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: password
+      PGDATA: /data/postgres
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/data/postgres -R --slot=replication_slot_2 -C --checkpoint=fast --host=postgres_primary --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo "cluster_name=pg_2" >> /data/postgres/postgresql.conf
+      echo 'Backup done, starting replica...'
+      bash -c `echo -e \"promote_trigger_file = '/failover_dir/down.trg'\" >> /data/postgres/postgresql.conf`
+      chown -Rf postgres:postgres /data/postgres
+      chmod -R 700 /data/postgres
+      su -p postgres -c postgres
+      "
+    networks:
+      - pg-network
+    depends_on:
+      - postgres_replica
+
+  pgpool:
+    image: pgpool/pgpool:4.4.3
+    container_name: pgpool-container
+    ports:
+      - "9999:9999"
+    networks:
+      - pg-network
+    environment:
+      PG_USERNAME: postgres
+      PG_PASSWORD: password
+    command: |
+      bash -c "
+      until pg_isready --dbname=postgres --host=postgres_primary --port=5432 --quiet --username=postgres && pg_isready --dbname=postgres --host=postgres_replica --port=5432 --quiet --username=postgres
+      do
+      echo 'Waiting for starting both nodes to connect...'
+      sleep 1s
+      done
+      chown -Rf postgres:postgres /failover.sh
+      chmod -R 700 /failover.sh
+      /opt/pgpool-II/bin/start.sh
+      "
+    volumes:
+      - ./pgpool2/pgpool.conf:/config/pgpool.conf
+      - ./pgpool2/failover.sh:/failover.sh
+      - failover_volume:/failover_dir
+    depends_on:
+      - postgres_primary
+      - postgres_replica
+
+
+networks:
+  pg-network:
+    driver: bridge
+
+volumes:
+  db-volume-primary:
+    name: postgres-pg-primary
+    driver: local
+    driver_opts:
+      o: "size=1g,uid=1000"
+      device: tmpfs
+      type: tmpfs
+  db-volume-replica-1:
+    name: postgres-pg-replica-1
+    driver: local
+    driver_opts:
+      o: "size=1g,uid=1001"
+      device: tmpfs
+      type: tmpfs
+  db-volume-replica-2:
+    name: postgres-pg-replica-2
+    driver: local
+    driver_opts:
+      o: "size=1g,uid=1002"
+      device: tmpfs
+      type: tmpfs
+  failover_volume:
+    name: failover_volume
+    driver: local
+    driver_opts:
+      o: "size=1m,uid=1003"
+      device: tmpfs
+      type: tmpfs
