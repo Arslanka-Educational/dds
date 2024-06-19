@@ -11,7 +11,8 @@ services:
     volumes:
       - db-volume-primary:/data
       - ./pg_node_primary/postgresql.conf:/postgresql.conf
-      - failover_volume:/failover_dir
+      - failover_volume_1:/failover_dir_1
+      - failover_volume_2:/failover_dir_2
       - ./pg_node_primary/start.sh:/start.sh
     environment:
       PGUSER: postgres
@@ -36,7 +37,7 @@ services:
       - "7777:5432"
     volumes:
       - db-volume-replica-1:/data/postgres
-      - failover_volume:/failover_dir
+      - failover_volume_1:/failover_dir_1
     environment:
       PGUSER: postgres
       PGPASSWORD: password
@@ -50,7 +51,7 @@ services:
       done
       echo "cluster_name=pg_1" >> /data/postgres/postgresql.conf
       echo 'Backup done, starting replica...'
-      bash -c `echo -e \"promote_trigger_file = '/failover_dir/down.trg'\" >> /data/postgres/postgresql.conf`
+      bash -c `echo -e \"promote_trigger_file = '/failover_dir_1/down.trg'\" >> /data/postgres/postgresql.conf`
       chown -Rf postgres:postgres /data/postgres
       chmod -R 700 /data/postgres
       su -p postgres -c postgres
@@ -69,7 +70,7 @@ services:
       - "8888:5432"
     volumes:
       - db-volume-replica-2:/data/postgres
-      - failover_volume:/failover_dir
+      - failover_volume_2:/failover_dir_2
     environment:
       PGUSER: postgres
       PGPASSWORD: password
@@ -83,7 +84,7 @@ services:
       done
       echo "cluster_name=pg_2" >> /data/postgres/postgresql.conf
       echo 'Backup done, starting replica...'
-      bash -c `echo -e \"promote_trigger_file = '/failover_dir/down.trg'\" >> /data/postgres/postgresql.conf`
+      bash -c `echo -e \"promote_trigger_file = '/failover_dir_2/down.trg'\" >> /data/postgres/postgresql.conf`
       chown -Rf postgres:postgres /data/postgres
       chmod -R 700 /data/postgres
       su -p postgres -c postgres
@@ -117,7 +118,8 @@ services:
     volumes:
       - ./pgpool2/pgpool.conf:/config/pgpool.conf
       - ./pgpool2/failover.sh:/failover.sh
-      - failover_volume:/failover_dir
+      - failover_volume_1:/failover_dir_1
+      - failover_volume_2:/failover_dir_2
     depends_on:
       - postgres_primary
       - postgres_replica
@@ -149,8 +151,15 @@ volumes:
       o: "size=1g,uid=1002"
       device: tmpfs
       type: tmpfs
-  failover_volume:
-    name: failover_volume
+  failover_volume_1:
+    name: failover_volume_1
+    driver: local
+    driver_opts:
+      o: "size=1m,uid=1003"
+      device: tmpfs
+      type: tmpfs
+  failover_volume_2:
+    name: failover_volume_2
     driver: local
     driver_opts:
       o: "size=1m,uid=1003"
